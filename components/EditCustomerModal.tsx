@@ -953,20 +953,35 @@ export default function EditCustomerModal({ isOpen, onClose, customer, initialSe
                 )}
 
                 {/* Footer actions */}
-                <div className="p-4 bg-neutral-50/50 border-t border-neutral-200/60 flex items-center gap-3 shrink-0">
-                    <Button
-                        variant="ghost"
-                        onClick={onClose}
-                        className="flex-1 rounded-xl h-11 text-neutral-600 hover:bg-white hover:text-neutral-900 border border-transparent hover:shadow-sm"
-                    >
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSaveChanges}
-                        className="flex-[2] rounded-xl h-11 bg-[#2A2A2A] text-white hover:bg-[#2A2A2A]/90 hover:shadow-lg transition-all"
-                    >
-                        Save Changes
-                    </Button>
+                <div className="p-5 sm:p-6 bg-white/80 backdrop-blur-xl border-t border-neutral-100 flex flex-col gap-4 shrink-0 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
+                    {/* Total Row */}
+                    <div className="flex items-center justify-between px-1">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider">Total Payable</span>
+                            <span className="text-xs font-semibold text-neutral-300">{services.length} Services</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-2xl sm:text-3xl font-black text-[#2A2A2A] tracking-tight">
+                                ₹{services.reduce((acc, s) => acc + (s.price || 0), 0).toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Button
+                            variant="ghost"
+                            onClick={onClose}
+                            className="flex-1 rounded-2xl h-12 sm:h-14 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100/50 border-2 border-transparent hover:border-neutral-100 font-bold text-base transition-all"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleSaveChanges}
+                            className="flex-[2] rounded-2xl h-12 sm:h-14 bg-[#2A2A2A] text-white hover:bg-[#2A2A2A]/90 hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all font-bold text-base shadow-lg shadow-[#2A2A2A]/10"
+                        >
+                            Save Changes
+                        </Button>
+                    </div>
                 </div>
 
             </div>
