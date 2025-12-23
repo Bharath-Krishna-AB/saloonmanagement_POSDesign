@@ -96,10 +96,11 @@ export default function PeopleTableRow({
             {/* Date/Time + Total Rate - Vertical Stack on Mobile */}
             <div className="flex justify-between items-center md:contents">
                 {/* Date/Time */}
+                {/* Time Only */}
                 <div className={cn("text-sm font-medium transition-colors duration-300 flex flex-col md:block", isActive ? "text-[#2A2A2A]" : "text-neutral-600")}>
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1 md:hidden">Date</span>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mb-1 md:hidden">Time</span>
                     <span>
-                        {person.date || "Today"} <span className={cn("text-xs md:ml-1 transition-colors block md:inline", isActive ? "text-[#2A2A2A]/80" : "text-neutral-400")}>{person.time || "2:00 PM"}</span>
+                        {person.time || "2:00 PM"}
                     </span>
                 </div>
 

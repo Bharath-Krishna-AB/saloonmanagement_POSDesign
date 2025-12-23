@@ -133,9 +133,10 @@ export default function MyWorkRow({ person, services, onViewEdit, index, isActiv
             <div className="flex justify-between items-center w-full md:contents">
 
                 {/* Date/Time (Mock for now, or assume "Today") */}
+                {/* Time Only */}
                 <div className={cn("text-sm font-medium transition-colors flex items-center", isActive ? "text-[#2A2A2A]" : "text-neutral-600")}>
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mr-2 md:hidden">Date:</span>
-                    Today <span className={cn("text-xs ml-1 transition-colors", isActive ? "text-[#2A2A2A]/80" : "text-neutral-400")}>2:00 PM</span>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider mr-2 md:hidden">Time:</span>
+                    <span className={cn("text-sm transition-colors", isActive ? "text-[#2A2A2A]" : "text-neutral-600")}>2:00 PM</span>
                 </div>
 
                 {/* Status (Desktop Only) */}

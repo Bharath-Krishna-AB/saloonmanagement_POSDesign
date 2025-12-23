@@ -22,7 +22,7 @@ interface PeopleTableHeaderProps {
 
 export default function PeopleTableHeader({ userRole, searchQuery, onSearchChange, onAddClick, activeTab }: PeopleTableHeaderProps) {
     const columns = [
-        "Name", "Date/Time", "Total Rate", "Details", "Approve"
+        "Name", "Time", "Total Rate", "Details", "Approve"
     ].filter(col => userRole === "Manager" || col !== "Approve")
 
     return (

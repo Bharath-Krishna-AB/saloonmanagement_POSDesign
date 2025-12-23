@@ -69,35 +69,18 @@ export default function MyWorkTable({
         <div className="w-full flex flex-col h-full bg-[#FAFAFA]/50 rounded-t-[32px] overflow-hidden">
             {/* 1️⃣ TOP FILTER / ACTION BAR */}
             <div className="flex flex-row items-center gap-4 px-6 py-5">
-                {/* Left: Search Input */}
+                {/* Search Input (Stretched) */}
                 <div className="relative flex-1">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">
                         <Search className="h-4 w-4" />
                     </div>
                     <input
                         type="text"
-                        placeholder="Search"
+                        placeholder="Search your tasks..."
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="w-full h-11 pl-11 pr-4 rounded-full bg-white border border-neutral-200 focus:ring-0 text-sm text-neutral-800 placeholder:text-neutral-400 outline-none transition-all hover:border-neutral-300"
                     />
-                </div>
-                {/* Right: Actions */}
-                <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                        onClick={onAddClick}
-                        className={cn(
-                            "h-10 pl-4 pr-5 rounded-full bg-[#2A2A2A] text-white shadow-lg flex items-center gap-2 group border border-transparent",
-                            "transition-all duration-300 ease-out", // Smooth physics-like motion
-                            "hover:-translate-y-[2px] hover:shadow-xl", // ONLY motion, no opacity/color change
-                            "active:translate-y-0 active:scale-95" // Click feedback
-                        )}
-                    >
-                        <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
-                            <Plus className="h-4 w-4" />
-                        </div>
-                        <span className="text-xs font-bold uppercase tracking-wide">Add Customer</span>
-                    </Button>
                 </div>
             </div>
 

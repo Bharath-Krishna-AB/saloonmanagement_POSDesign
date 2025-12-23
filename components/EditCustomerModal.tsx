@@ -71,14 +71,17 @@ const MOCK_CATALOG: Record<string, { name: string, price: number, duration: stri
 
 import { USERS } from "@/lib/data"
 
-const STAFF_LIST = USERS.map((u, i) => ({
-    id: `staff-${i}`,
-    name: u.name,
-    role: u.role.toUpperCase(), // Display role clearly
-    status: "Available",
-    image: `https://i.pravatar.cc/150?u=${u.name}`,
-    nextAvailable: undefined as string | undefined
-}))
+const STAFF_LIST = USERS.map((u, i) => {
+    const isBusy = i === 1 || i === 3
+    return {
+        id: `staff-${i}`,
+        name: u.name,
+        role: u.role.toUpperCase(), // Display role clearly
+        status: isBusy ? "Busy" : "Available",
+        image: `https://i.pravatar.cc/150?u=${u.name}`,
+        nextAvailable: isBusy ? "4:00 PM" : undefined
+    }
+})
 
 const MOCK_STAFF = STAFF_LIST
 
@@ -287,7 +290,7 @@ interface AssignStaffSectionProps {
 function AssignStaffSection({ onBack, onConfirm, selectedServicesCount }: AssignStaffSectionProps) {
     const sectionRef = React.useRef<HTMLDivElement>(null)
     const [selectedStaffId, setSelectedStaffId] = React.useState<string | null>(null)
-    const [filter, setFilter] = React.useState<"All" | "Available">("All")
+    const [filter, setFilter] = React.useState<"Available" | "All">("Available")
 
     useGSAP(() => {
         gsap.fromTo(sectionRef.current,
@@ -311,7 +314,7 @@ function AssignStaffSection({ onBack, onConfirm, selectedServicesCount }: Assign
                         <span className="text-xs text-neutral-500 font-medium">For {selectedServicesCount} selected services</span>
                     </div>
                     <div className="flex bg-neutral-100 rounded-full p-1">
-                        {(["All", "Available"] as const).map(f => (
+                        {(["Available", "All"] as const).map(f => (
                             <button
                                 key={f}
                                 onClick={() => setFilter(f)}
@@ -921,9 +924,9 @@ export default function EditCustomerModal({ isOpen, onClose, customer, initialSe
                                                 <Button
                                                     size="sm"
                                                     onClick={() => handleCompleteService(service.id)}
-                                                    className="h-8 px-3 rounded-lg bg-white border border-neutral-200 text-neutral-600 hover:bg-[#2A2A2A] hover:text-white hover:border-[#2A2A2A] transition-all text-xs font-semibold"
+                                                    className="h-auto min-h-0 px-3 py-1 rounded-lg bg-[#FFF5F5] border border-[#FFE0E0] text-[#FF4D4D] hover:bg-[#FFE0E0] hover:text-[#D93030] hover:border-[#FF4D4D]/20 transition-all text-[10px] font-bold uppercase tracking-wider shadow-none"
                                                 >
-                                                    Complete
+                                                    Ongoing
                                                 </Button>
                                             )
                                         )}
@@ -932,7 +935,7 @@ export default function EditCustomerModal({ isOpen, onClose, customer, initialSe
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => handleRemoveService(service.id)}
-                                            className="h-8 w-8 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            className="h-8 w-8 text-neutral-300 hover:text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
