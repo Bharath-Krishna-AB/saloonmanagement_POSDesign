@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Plus, Trash2, ChevronDown, Search, Check, User as UserIcon, Clock, Calendar, RotateCcw, Camera, Sparkles, Timer } from "lucide-react"
+import { X, Plus, Trash2, ChevronDown, Search, Check, User as UserIcon, Clock, Calendar, RotateCcw, Camera, Sparkles, Timer, Pen } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,8 @@ export interface ServiceItem {
     employee: string
     status: "Ongoing" | "Completed"
     price?: number
+    duration?: string
+    startTime?: number // timestamp in ms
 }
 
 interface EditCustomerModalProps {
@@ -32,58 +34,20 @@ interface EditCustomerModalProps {
     onSave: (services: ServiceItem[], customerData?: any) => void
     mode?: 'edit' | 'create'
     currentUser?: User
+    staffAvailability?: Record<string, Date>
 }
 
 // --- Mock Data ---
 
-const CATEGORIES = ["Hair", "Skin", "Mani | Pedi", "Make Up", "Add-on Services", "Packages"]
+import { USERS, CATEGORIES, MOCK_CATALOG } from "@/lib/data"
 
-const MOCK_CATALOG: Record<string, { name: string, price: number, duration: string }[]> = {
-    "Hair": [
-        { name: "Bangs | Fringe Cut", price: 230, duration: "30m" },
-        { name: "Classic Hair Cut", price: 400, duration: "45m" },
-        { name: "Layer Trimming", price: 700, duration: "60m" },
-        { name: "Style Changing", price: 900, duration: "90m" },
-        { name: "Advance Hair Cut", price: 1000, duration: "90m" },
-        { name: "Kids Cut", price: 300, duration: "30m" },
-        { name: "Hair & Beard Setting", price: 1000, duration: "60m" },
-    ],
-    "Skin": [
-        { name: "Basic Facial", price: 500, duration: "45m" },
-        { name: "Deep Cleanse", price: 800, duration: "60m" },
-        { name: "Hydra Facial", price: 1200, duration: "90m" },
-    ],
-    "Mani | Pedi": [
-        { name: "Classic Manicure", price: 500, duration: "45m" },
-        { name: "Gel Manicure", price: 800, duration: "60m" },
-    ],
-    "Make Up": [
-        { name: "Party Makeup", price: 1500, duration: "60m" },
-        { name: "Bridal Makeup", price: 5000, duration: "180m" },
-    ],
-    "Add-on Services": [
-        { name: "Scalp Massage", price: 300, duration: "15m" },
-    ],
-    "Packages": [
-        { name: "Full Makeover", price: 6000, duration: "240m" },
-    ]
-}
-
-import { USERS } from "@/lib/data"
-
-const STAFF_LIST = USERS.map((u, i) => {
-    const isBusy = i === 1 || i === 3
-    return {
-        id: `staff-${i}`,
-        name: u.name,
-        role: u.role.toUpperCase(), // Display role clearly
-        status: isBusy ? "Busy" : "Available",
-        image: `https://i.pravatar.cc/150?u=${u.name}`,
-        nextAvailable: isBusy ? "4:00 PM" : undefined
-    }
-})
-
-const MOCK_STAFF = STAFF_LIST
+// Derive STAFF_LIST directly in component or just use USERS
+const MOCK_STAFF = USERS.map((u, i) => ({
+    id: `staff-${i}`,
+    name: u.name,
+    role: u.role.toUpperCase(),
+    image: u.avatar
+}))
 
 // --- Sub-Components ---
 
@@ -285,12 +249,24 @@ interface AssignStaffSectionProps {
     onBack: () => void
     onConfirm: (staff: typeof MOCK_STAFF[0]) => void
     selectedServicesCount: number
+    reassignServiceName?: string
+    staffAvailability?: Record<string, Date>
 }
 
-function AssignStaffSection({ onBack, onConfirm, selectedServicesCount }: AssignStaffSectionProps) {
+function AssignStaffSection({ onBack, onConfirm, selectedServicesCount, reassignServiceName, staffAvailability }: AssignStaffSectionProps) {
     const sectionRef = React.useRef<HTMLDivElement>(null)
     const [selectedStaffId, setSelectedStaffId] = React.useState<string | null>(null)
     const [filter, setFilter] = React.useState<"Available" | "All">("Available")
+
+    // Live Update for Availability
+    const [now, setNow] = React.useState(new Date())
+
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            setNow(new Date())
+        }, 10000) // Update every 10s for responsiveness
+        return () => clearInterval(interval)
+    }, [])
 
     useGSAP(() => {
         gsap.fromTo(sectionRef.current,
@@ -299,7 +275,18 @@ function AssignStaffSection({ onBack, onConfirm, selectedServicesCount }: Assign
         )
     }, { scope: sectionRef })
 
-    const filteredStaff = MOCK_STAFF.filter(staff => {
+    const filteredStaff = MOCK_STAFF.map(staff => {
+        const busyUntil = staffAvailability?.[staff.name]
+        // Check relative to live 'now' state
+        const isBusy = busyUntil && busyUntil > now
+
+        return {
+            ...staff,
+            status: isBusy ? "Busy" : "Available",
+            nextAvailable: isBusy ? busyUntil?.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : undefined,
+            rawBusyUntil: busyUntil // for sorting if needed
+        }
+    }).filter(staff => {
         if (filter === "Available") return staff.status === "Available"
         return true
     })
@@ -310,8 +297,10 @@ function AssignStaffSection({ onBack, onConfirm, selectedServicesCount }: Assign
             <div className="pt-6 px-6 pb-4 bg-white/50 border-b border-neutral-100 flex flex-col gap-4">
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col">
-                        <h2 className="text-xl font-bold text-neutral-900">Assign Staff</h2>
-                        <span className="text-xs text-neutral-500 font-medium">For {selectedServicesCount} selected services</span>
+                        <h2 className="text-xl font-bold text-neutral-900">{reassignServiceName ? "Reassign Staff" : "Assign Staff"}</h2>
+                        <span className="text-xs text-neutral-500 font-medium">
+                            {reassignServiceName ? `For ${reassignServiceName}` : `For ${selectedServicesCount} selected services`}
+                        </span>
                     </div>
                     <div className="flex bg-neutral-100 rounded-full p-1">
                         {(["Available", "All"] as const).map(f => (
@@ -340,13 +329,13 @@ function AssignStaffSection({ onBack, onConfirm, selectedServicesCount }: Assign
                         return (
                             <div
                                 key={staff.id}
-                                onClick={() => setSelectedStaffId(staff.id)}
+                                onClick={() => !(!isAvailable) && setSelectedStaffId(staff.id)} // Prevent selection if busy
                                 className={cn(
-                                    "relative p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 cursor-pointer group",
+                                    "relative p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 group",
+                                    !isAvailable ? "cursor-not-allowed opacity-60 bg-neutral-50" : "cursor-pointer",
                                     isSelected
                                         ? "bg-white border-[#2A2A2A] shadow-lg scale-[1.02]"
-                                        : "bg-white border-neutral-100 hover:border-neutral-300 hover:shadow-md",
-                                    !isAvailable && !isSelected && "bg-neutral-50/50 border-transparent opacity-60 grayscale hover:grayscale-0 hover:opacity-100"
+                                        : (isAvailable ? "bg-white border-neutral-100 hover:border-neutral-300 hover:shadow-md" : "border-transparent"),
                                 )}
                             >
                                 <div className="relative">
@@ -423,14 +412,14 @@ function AssignStaffSection({ onBack, onConfirm, selectedServicesCount }: Assign
 
 interface AddServiceSectionProps {
     onClose: () => void
-    onNext: (selected: { name: string, price: number }[]) => void
+    onNext: (selected: { name: string, price: number, duration: string }[]) => void // Type update
 }
 
 function AddServiceSection({ onClose, onNext }: AddServiceSectionProps) {
     const sectionRef = React.useRef<HTMLDivElement>(null)
     const listRef = React.useRef<HTMLDivElement>(null)
     const [activeCategory, setActiveCategory] = React.useState("Hair")
-    const [selectedServices, setSelectedServices] = React.useState<string[]>([])
+    const [selectedServices, setSelectedServices] = React.useState<{ name: string, price: number, duration: string }[]>([]) // Capture duration
     const [searchQuery, setSearchQuery] = React.useState("")
     const [isSearchFocused, setIsSearchFocused] = React.useState(false)
 
@@ -452,25 +441,17 @@ function AddServiceSection({ onClose, onNext }: AddServiceSectionProps) {
         }
     }, { dependencies: [activeCategory], scope: listRef })
 
-    const handleSelect = (name: string) => {
-        if (selectedServices.includes(name)) {
-            setSelectedServices(selectedServices.filter(s => s !== name))
+    const handleSelect = (service: { name: string, price: number, duration: string }) => {
+        const exists = selectedServices.find(s => s.name === service.name)
+        if (exists) {
+            setSelectedServices(selectedServices.filter(s => s.name !== service.name))
         } else {
-            setSelectedServices([...selectedServices, name])
+            setSelectedServices([...selectedServices, { name: service.name, price: service.price, duration: service.duration }])
         }
     }
 
     const handleNext = () => {
-        // Find full service objects
-        const selectedObjects: { name: string, price: number }[] = []
-        const allServices = Object.values(MOCK_CATALOG).flat()
-
-        selectedServices.forEach(name => {
-            const found = allServices.find(s => s.name === name)
-            if (found) selectedObjects.push(found)
-        })
-
-        onNext(selectedObjects)
+        onNext(selectedServices)
     }
 
     const currentServices = (MOCK_CATALOG[activeCategory] || []).filter(s =>
@@ -541,12 +522,12 @@ function AddServiceSection({ onClose, onNext }: AddServiceSectionProps) {
 
                 <div ref={listRef} className="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-32">
                     {currentServices.map((service) => {
-                        const isSelected = selectedServices.includes(service.name)
+                        const isSelected = selectedServices.some(s => s.name === service.name)
                         return (
                             <motion.div
                                 key={service.name}
                                 layout
-                                onClick={() => handleSelect(service.name)}
+                                onClick={() => handleSelect(service)}
                                 className={cn(
                                     "relative p-6 rounded-[24px] bg-white border cursor-pointer flex flex-col justify-between transition-all duration-300 group overflow-hidden h-[150px] sm:h-[160px]",
                                     isSelected
@@ -641,14 +622,15 @@ const MOCK_SERVICES_INIT: ServiceItem[] = [
 
 type ModalView = "list" | "add-service" | "assign-staff" | "details"
 
-export default function EditCustomerModal({ isOpen, onClose, customer, initialServices, onSave, mode = 'edit', currentUser }: EditCustomerModalProps) {
+export default function EditCustomerModal({ isOpen, onClose, customer, initialServices, onSave, mode = 'edit', currentUser, staffAvailability }: EditCustomerModalProps) {
     const containerRef = React.useRef<HTMLDivElement>(null)
     const modalRef = React.useRef<HTMLDivElement>(null)
 
     // State
     const [services, setServices] = React.useState<ServiceItem[]>([])
     const [view, setView] = React.useState<ModalView>("list")
-    const [tempSelectedServices, setTempSelectedServices] = React.useState<{ name: string, price: number }[]>([])
+    const [tempSelectedServices, setTempSelectedServices] = React.useState<{ name: string, price: number, duration: string }[]>([])
+    const [editingServiceId, setEditingServiceId] = React.useState<string | null>(null)
 
     // New Customer Details State
     const [newCustomerDetails, setNewCustomerDetails] = React.useState<any>(null)
@@ -727,22 +709,40 @@ export default function EditCustomerModal({ isOpen, onClose, customer, initialSe
         setView("add-service")
     }
 
-    const handleServiceSelectionNext = (newServices: { name: string, price: number }[]) => {
+    const handleServiceSelectionNext = (newServices: { name: string, price: number, duration: string }[]) => {
         setTempSelectedServices(newServices)
         setView("assign-staff")
     }
 
     const handleStaffAssignmentConfirm = (staff: typeof MOCK_STAFF[0]) => {
-        const added: ServiceItem[] = tempSelectedServices.map(s => ({
-            id: Math.random().toString(36).substr(2, 9),
-            name: s.name,
-            employee: staff.name,
-            status: "Ongoing",
-            price: s.price
-        }))
-        setServices(prev => [...prev, ...added])
+        if (editingServiceId) {
+            // Reassign mode
+            setServices(prev => prev.map(s => {
+                if (s.id === editingServiceId) {
+                    return { ...s, employee: staff.name }
+                }
+                return s
+            }))
+            setEditingServiceId(null)
+        } else {
+            // Add new services mode
+            const added: ServiceItem[] = tempSelectedServices.map(s => ({
+                id: Math.random().toString(36).substr(2, 9),
+                name: s.name,
+                employee: staff.name,
+                status: "Ongoing",
+                price: s.price,
+                duration: s.duration
+            }))
+            setServices(prev => [...prev, ...added])
+        }
         // If in create mode, we might want to stay in add-service or go to list. Going to list is cleaner.
         setView("list")
+    }
+
+    const handleReassignStart = (id: string) => {
+        setEditingServiceId(id)
+        setView("assign-staff")
     }
 
     const handleCompleteService = (id: string) => {
@@ -837,8 +837,17 @@ export default function EditCustomerModal({ isOpen, onClose, customer, initialSe
                 {view === "assign-staff" && (
                     <AssignStaffSection
                         selectedServicesCount={tempSelectedServices.length}
-                        onBack={() => setView("add-service")} // Allows going back to change services
+                        onBack={() => {
+                            if (editingServiceId) {
+                                setEditingServiceId(null)
+                                setView("list")
+                            } else {
+                                setView("add-service")
+                            }
+                        }}
                         onConfirm={handleStaffAssignmentConfirm}
+                        reassignServiceName={editingServiceId ? services.find(s => s.id === editingServiceId)?.name : undefined}
+                        staffAvailability={staffAvailability}
                     />
                 )}
 
@@ -889,13 +898,33 @@ export default function EditCustomerModal({ isOpen, onClose, customer, initialSe
                                         <div className="flex flex-col">
                                             <span className="font-bold text-[#2A2A2A]">{service.name}</span>
                                             <div className="flex items-center gap-2 mt-0.5">
-                                                <span className="text-xs font-semibold text-neutral-500">
-                                                    {service.employee}
-                                                </span>
+                                                <div className="flex items-center gap-1.5 cursor-pointer group/staff"
+                                                    onClick={() => {
+                                                        if (currentUser?.role === 'Manager') handleReassignStart(service.id)
+                                                    }}
+                                                >
+                                                    <span className={cn(
+                                                        "text-xs font-semibold text-neutral-500 transition-colors",
+                                                        currentUser?.role === 'Manager' && "group-hover/staff:text-[#2A2A2A] underline decoration-dotted underline-offset-2 decoration-neutral-300"
+                                                    )}>
+                                                        {service.employee}
+                                                    </span>
+                                                    {currentUser?.role === 'Manager' && (
+                                                        <Pen className="w-2.5 h-2.5 text-neutral-400 ml-1 hover:text-neutral-600 transition-colors" />
+                                                    )}
+                                                </div>
                                                 <div className="h-1 w-1 rounded-full bg-neutral-300" />
                                                 <span className="text-xs font-medium text-neutral-400">
                                                     ₹{service.price}
                                                 </span>
+                                                {service.duration && (
+                                                    <>
+                                                        <div className="h-1 w-1 rounded-full bg-neutral-300" />
+                                                        <span className="text-xs font-medium text-neutral-400">
+                                                            {service.duration}
+                                                        </span>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

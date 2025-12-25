@@ -23,6 +23,7 @@ interface Person {
         phone: string
         sex: string
     }
+    avatar?: string
 }
 
 interface PeopleTableRowProps {
@@ -75,8 +76,8 @@ export default function PeopleTableRow({
             {/* Name + Avatar (Mobile: Top Left) */}
             <div className="flex items-center gap-3 z-10 w-full md:w-auto">
                 <Avatar className="h-10 w-10 border border-white/40 shadow-sm">
-                    <AvatarImage src={`https://i.pravatar.cc/150?u=${person.id}`} />
-                    <AvatarFallback className="bg-neutral-200 text-neutral-600 text-xs font-medium">
+                    <AvatarImage src={person.avatar} />
+                    <AvatarFallback className="bg-neutral-400 text-white text-xs font-medium">
                         {person.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                 </Avatar>

@@ -11,6 +11,7 @@ import MyWorkTable from "./MyWorkTable"
 import EditCustomerModal, { ServiceItem } from "./EditCustomerModal"
 import ConfirmationModal from "./ConfirmationModal"
 import type { User } from "@/lib/types"
+import { USERS, MOCK_CATALOG } from "@/lib/data"
 
 export interface Person {
     id: string
@@ -25,6 +26,7 @@ export interface Person {
         phone: string
         sex: string
     }
+    avatar?: string
 }
 
 const INITIAL_PEOPLE_DATA: Person[] = [
@@ -90,6 +92,15 @@ interface PeopleTableProps {
     activeTab: string
 }
 
+// Helper to parse duration string (e.g., "30m", "1h 30m") to minutes
+const parseDurationToMinutes = (durationStr: string | undefined): number => {
+    if (!durationStr) return 0
+    // Simple parser for "30m" format used in data
+    const match = durationStr.match(/(\d+)m/)
+    return match ? parseInt(match[1]) : 30 // Default 30m if parse fails
+}
+
+
 export default function PeopleTable({ currentUser, activeTab }: PeopleTableProps) {
     const userRole = currentUser.role
     const [selectedId, setSelectedId] = React.useState<string>("2")
@@ -103,20 +114,24 @@ export default function PeopleTable({ currentUser, activeTab }: PeopleTableProps
     // Per-Customer Data Storage
     const [customerServices, setCustomerServices] = React.useState<Record<string, ServiceItem[]>>(() => {
         const initial: Record<string, ServiceItem[]> = {}
+        const allServices = Object.values(MOCK_CATALOG).flat()
+
         INITIAL_PEOPLE_DATA.forEach(p => {
             // Generate services based on p.employee to ensure consistency
             const employeeName = p.employee || "Unassigned"
 
             // Randomly select a service name for variety, but assign to the correct employee
-            const serviceName = ["Haircut", "Beard Trim", "Facial", "Manicure"][Math.floor(Math.random() * 4)]
+            const randomService = allServices[Math.floor(Math.random() * allServices.length)]
 
             const services: ServiceItem[] = [
                 {
                     id: Math.random().toString(36).substr(2, 9),
-                    name: serviceName,
+                    name: randomService.name,
                     employee: employeeName,
                     status: p.status === "Completed" || p.status === "Approved" ? "Completed" : "Ongoing",
-                    price: p.price || 0
+                    price: p.price || randomService.price,
+                    duration: randomService.duration,
+                    startTime: Date.now() // Simulate start time as now for initial load
                 }
             ]
 
@@ -144,6 +159,48 @@ export default function PeopleTable({ currentUser, activeTab }: PeopleTableProps
         variant: "default",
         confirmLabel: "Confirm"
     })
+
+    // Dynamic Staff Availability Calculation
+    const staffAvailability = React.useMemo(() => {
+        const availability: Record<string, Date> = {}
+        const now = new Date()
+
+        // Initialize all staff with current time
+        USERS.forEach(u => availability[u.name] = new Date(now))
+
+        // Iterate all active services to accumulate time
+        Object.values(customerServices).flat().forEach(service => {
+            if (service.status === 'Ongoing' && service.employee && service.employee !== 'Unassigned') {
+                const currentFreeTime = availability[service.employee] || new Date(now)
+                const durationMinutes = parseDurationToMinutes(service.duration)
+
+                let finalDuration = durationMinutes
+                if (finalDuration === 0) {
+                    const found = Object.values(MOCK_CATALOG).flat().find(c => c.name === service.name)
+                    if (found) finalDuration = parseDurationToMinutes(found.duration)
+                }
+
+                if (finalDuration > 0) {
+                    // Start time usage:
+                    // If service has a fixed startTime, use it. 
+                    // Fallback to currentFreeTime (which defaults to now at start of loop) for relative stacking if needed, 
+                    // buy ideally we want absolute time.
+                    // Actually, if we have multiple services for one person, we need to stack them? 
+                    // For now, let's assume we want to know when they are free based on THIS service.
+
+                    const effectiveStartTime = service.startTime ? new Date(service.startTime) : currentFreeTime
+                    const endTime = new Date(effectiveStartTime.getTime() + finalDuration * 60000)
+
+                    // If this service ends later than what we currently know, update availability
+                    if (endTime > availability[service.employee]) {
+                        availability[service.employee] = endTime
+                    }
+                }
+            }
+        })
+        return availability
+    }, [customerServices])
+
 
     // Filtered Data
     const filteredPeople = people.filter(person => {
@@ -204,7 +261,8 @@ export default function PeopleTable({ currentUser, activeTab }: PeopleTableProps
                 },
                 totalRate: `₹${total.toLocaleString()}`,
                 date: "Today", // Default for new
-                time: "Now"
+                time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                avatar: customerData.avatar
             }
 
             setPeople(prev => [newPerson, ...prev])
@@ -300,6 +358,7 @@ export default function PeopleTable({ currentUser, activeTab }: PeopleTableProps
                 onSave={handleSaveCustomer}
                 mode={modalMode}
                 currentUser={currentUser}
+                staffAvailability={staffAvailability}
             />
 
             <ConfirmationModal
