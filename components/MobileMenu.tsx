@@ -26,7 +26,9 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
 
     useGSAP(() => {
         // Set initial state for container
-        gsap.set(containerRef.current, { yPercent: -100 })
+        // Start with yPercent -100 (offscreen) and autoAlpha 1 (visible but offscreen)
+        // We use CSS 'invisible' class to prevent FOUC before this runs
+        gsap.set(containerRef.current, { yPercent: -100, autoAlpha: 1 })
 
         // Batch set initial state for ALL arrows to ensure they are hidden
         gsap.set(".menu-arrow", {
@@ -134,7 +136,7 @@ export default function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     return (
         <div
             ref={containerRef}
-            className="fixed inset-0 z-[300] h-[100dvh] w-full flex flex-col overflow-hidden"
+            className="fixed inset-0 z-[300] h-[100dvh] w-full flex flex-col overflow-hidden invisible"
         >
             {/* Background Gradient */}
             <div className="absolute inset-0 bg-white " />
