@@ -5,16 +5,10 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
+import type { User, ServiceItem } from "@/lib/types"
 import { Pen } from "lucide-react"
 
 // Types reused from EditCustomerModal.tsx or defined locally if necessary
-export interface ServiceItem {
-    id: string
-    name: string
-    employee: string
-    status: "Ongoing" | "Completed"
-    price?: number
-}
 
 interface Person {
     id: string
@@ -62,12 +56,19 @@ export default function MyWorkRow({ person, services, onViewEdit, index, isActiv
             className={cn(
                 // Base: Flex Col (Mobile) - Grid (Desktop)
                 "flex flex-col gap-3 p-4 md:grid md:grid-cols-[3fr_2fr_1.5fr_1fr_1fr] lg:md:grid-cols-[2.5fr_2fr_2fr_1.5fr_1fr] md:gap-4 md:px-6 md:py-4 md:items-center",
-                "rounded-xl transition-all items-center group mb-2 border cursor-pointer",
+                "rounded-xl transition-all items-center group mb-2 border cursor-pointer relative overflow-hidden",
                 isActive
-                    ? "bg-[#FFD75E] border-[#FFD75E] shadow-sm"
+                    ? "bg-gradient-to-r from-yellow-50/50 via-white to-white border-[#FFD75E] shadow-[0_8px_30px_rgba(0,0,0,0.08)] scale-[1.01] z-10 ring-1 ring-[#FFD75E]/20"
                     : "bg-white border-neutral-100 hover:border-neutral-200 hover:shadow-sm"
             )}
         >
+            {/* Active Accent Bar with Glow */}
+            {isActive && (
+                <motion.div
+                    layoutId="active-row-bar"
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FFD75E] to-[#FFC107] shadow-[0_0_12px_rgba(255,215,94,0.6)]"
+                />
+            )}
             {/* Top Row (Mobile): Customer + Status */}
             <div className="flex justify-between items-center w-full md:contents">
                 {/* Customer */}

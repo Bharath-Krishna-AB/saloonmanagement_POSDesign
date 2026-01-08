@@ -11,17 +11,8 @@ import { useGSAP } from "@gsap/react"
 import ConfirmationModal from "./ConfirmationModal"
 
 // --- Types ---
-import type { User } from "@/lib/types"
+import type { User, ServiceItem } from "@/lib/types"
 
-export interface ServiceItem {
-    id: string
-    name: string
-    employee: string
-    status: "Ongoing" | "Completed"
-    price?: number
-    duration?: string
-    startTime?: number // timestamp in ms
-}
 
 interface EditCustomerModalProps {
     isOpen: boolean
@@ -461,7 +452,7 @@ function AddServiceSection({ onClose, onNext }: AddServiceSectionProps) {
     return (
         <div ref={sectionRef} className="absolute inset-0 bg-[#FDfAf5] z-50 flex flex-col overflow-hidden rounded-t-[32px]">
             {/* Header Controls */}
-            <div className="pt-8 px-8 pb-4 shrink-0 bg-[#FDfAf5] flex flex-col gap-6 z-20">
+            <div className="pt-8 px-5 md:px-8 pb-4 shrink-0 bg-[#FDfAf5] flex flex-col gap-6 z-20">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex flex-col min-w-0">
                         <h2 className="text-2xl font-black text-neutral-900 tracking-tight truncate">Select Services</h2>

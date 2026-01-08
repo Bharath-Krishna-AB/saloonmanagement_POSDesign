@@ -8,10 +8,11 @@ import { useGSAP } from "@gsap/react"
 import PeopleTableHeader from "./PeopleTableHeader"
 import PeopleTableRow from "./PeopleTableRow"
 import MyWorkTable from "./MyWorkTable"
-import EditCustomerModal, { ServiceItem } from "./EditCustomerModal"
+import EditCustomerModal from "./EditCustomerModal"
 import ConfirmationModal from "./ConfirmationModal"
-import type { User } from "@/lib/types"
+import type { User, ServiceItem } from "@/lib/types"
 import { USERS, MOCK_CATALOG } from "@/lib/data"
+import { useScheduler } from "@/hooks/useScheduler"
 
 export interface Person {
     id: string
@@ -142,6 +143,9 @@ export default function PeopleTable({ currentUser, activeTab }: PeopleTableProps
 
     // Search State
     const [searchQuery, setSearchQuery] = React.useState("")
+
+    // Automatic Scheduler
+    useScheduler(customerServices, setCustomerServices, USERS)
 
     // Confirmation Modal State
     const [confirmation, setConfirmation] = React.useState<{

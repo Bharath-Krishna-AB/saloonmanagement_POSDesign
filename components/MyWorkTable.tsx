@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import { ChevronsUpDown, Search, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import MyWorkRow, { ServiceItem } from "./MyWorkRow"
-import type { User } from "@/lib/types"
+import MyWorkRow from "./MyWorkRow"
+import type { User, ServiceItem } from "@/lib/types"
 
 interface PersonType {
     id: string
@@ -86,7 +86,7 @@ export default function MyWorkTable({
 
             {/* Header Row - HIDDEN ON MOBILE */}
             <div className="hidden md:grid grid-cols-[3fr_2fr_1.5fr_1fr_1fr] lg:grid-cols-[2.5fr_2fr_2fr_1.5fr_1fr] gap-4 px-6 py-3 border-b border-dashed border-neutral-200/60 mt-2">
-                {["Customer", "Services", "Date", "Status", "Action"].map((col) => (
+                {["Customer", "Services", "Time", "Status", "Action"].map((col) => (
                     <div key={col} className={cn(
                         "text-[11px] font-medium text-neutral-400/80 uppercase tracking-widest flex items-center gap-1 cursor-pointer hover:text-neutral-500 transition-colors",
                         col === "Action" ? "justify-end pr-2" : "pl-2"

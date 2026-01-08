@@ -7,8 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { RotateCcw } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import type { User } from "@/lib/types"
-import { ServiceItem } from "./EditCustomerModal"
+import type { User, ServiceItem } from "@/lib/types"
 
 interface Person {
     id: string
@@ -55,14 +54,14 @@ export default function PeopleTableRow({
         <motion.div
             layout
             className={cn(
-                "people-row rounded-xl cursor-pointer relative transition-all group mb-2 border",
+                "people-row rounded-xl cursor-pointer relative transition-all group mb-2 border overflow-hidden",
                 // Mobile: Flex Column (Card), Desktop: Grid
-                "flex flex-col gap-3 p-4 md:gap-4 md:px-6 md:py-4 md:grid md:items-center",
+                "flex flex-col gap-3 p-3 md:gap-4 md:px-6 md:py-4 md:grid md:items-center",
                 userRole === "Manager"
                     ? "md:grid-cols-[3fr_2fr_1.5fr_1.5fr_1.5fr]"
                     : "md:grid-cols-[3fr_2fr_2fr_2fr]",
                 isActive
-                    ? "bg-[#FFD75E] border-[#FFD75E] shadow-sm"
+                    ? "bg-gradient-to-r from-yellow-50/50 via-white to-white border-[#FFD75E] shadow-[0_8px_30px_rgba(0,0,0,0.08)] scale-[1.01] z-10 ring-1 ring-[#FFD75E]/20"
                     : "bg-white border-neutral-100 hover:border-neutral-200 hover:shadow-sm"
             )}
             onClick={() => onSelect(person.id)}
@@ -73,16 +72,23 @@ export default function PeopleTableRow({
             } : {}}
             transition={{ duration: 0.2 }}
         >
+            {/* Active Accent Bar with Glow */}
+            {isActive && (
+                <motion.div
+                    layoutId="active-people-row-bar"
+                    className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FFD75E] to-[#FFC107] shadow-[0_0_12px_rgba(255,215,94,0.6)]"
+                />
+            )}
             {/* Name + Avatar (Mobile: Top Left) */}
-            <div className="flex items-center gap-3 z-10 w-full md:w-auto">
-                <Avatar className="h-10 w-10 border border-white/40 shadow-sm">
+            <div className="flex items-center gap-3 z-10 w-full md:w-auto min-w-0">
+                <Avatar className="h-10 w-10 border border-white/40 shadow-sm shrink-0">
                     <AvatarImage src={person.avatar} />
                     <AvatarFallback className="bg-neutral-400 text-white text-xs font-medium">
                         {person.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
-                    <span className={cn("font-medium text-base transition-colors duration-300", isActive ? "text-[#2A2A2A]" : "text-[#3A3A3A]")}>
+                <div className="flex flex-col min-w-0 flex-1">
+                    <span className={cn("font-medium text-base transition-colors duration-300 truncate", isActive ? "text-[#2A2A2A]" : "text-[#3A3A3A]")}>
                         {person.name}
                     </span>
                     <span className={cn("text-xs font-medium mt-0.5 transition-colors", isActive ? "text-[#2A2A2A]" : "text-neutral-500")}>

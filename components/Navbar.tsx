@@ -189,7 +189,7 @@ export default function Navbar({ currentUser, onUserChange, users }: NavbarProps
           <div className="flex min-[1160px]:hidden ml-3">
             <motion.button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="h-10 w-10 rounded-full bg-white/50 hover:bg-white/80 flex flex-col items-center justify-center gap-[5px] relative z-50 shadow-sm transition-colors border border-white/50"
+              className="h-11 w-11 rounded-full bg-white/50 hover:bg-white/80 flex flex-col items-center justify-center gap-[5px] relative z-50 shadow-sm transition-colors border border-white/50"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               animate={isMobileMenuOpen ? "open" : "closed"}
